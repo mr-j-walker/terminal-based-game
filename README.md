@@ -1,1 +1,1 @@
-# terminal-based-game
+# Terminal-Based Blackjack
