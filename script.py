@@ -80,14 +80,12 @@ class Player:
         if self.sum > 21:
             print("{name} has {sum}, they have busted.".format(name=self.name, sum = self.sum))
             return True
-        elif self.sum >= 18:
-            print("{name} has {sum}, they decide to stand.".format(name=self.name, sum = self.sum))
-            return True
-        elif self.sum <= 16 and self.sum < other.sum:
+        elif self.sum < 18 and self.sum < other.sum:
             print("{name} has {sum}, they hit.".format(name=self.name, sum = self.sum))
             self.draw_card(deck)
             print("{name} now has {sum}".format(name=self.name, sum = self.sum))
             return False
+        print("{name} has {sum}, they decide to stand.".format(name=self.name, sum = self.sum))
         return True
 
     def reset(self, deck):
