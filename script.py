@@ -1,11 +1,10 @@
 import random
 
-
 class Card:
-
+ 
     suits = ["clubs", "spades", "hearts", "diamonds"]
-    faces = {"ace": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
-             "seven": 7, "eight": 8, "nine": 9, "ten": 10, "jack": 10, "queen": 10, "king": 10}
+    faces = {"two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+             "seven": 7, "eight": 8, "nine": 9, "ten": 10, "jack": 10, "queen": 10, "king": 10, "ace": 11}
 
     def __init__(self, suit, face):
         self.suit = suit
@@ -38,60 +37,78 @@ class Deck:
             dealer.drawCard(self)
 
     def reportWin(self, player, dealer):
-        player_win = player.sum > dealer.sum and player.sum <= 21
-        dealer_win = (player.sum < dealer.sum or player.sum > 21) and dealer.sum <= 21
+        player_win = (player.calcHand() > dealer.calcHand() or dealer.calcHand() > 21) and player.calcHand() <= 21
+        dealer_win = (player.calcHand() < dealer.calcHand() or player.calcHand() > 21) and dealer.calcHand() <= 21
         if player_win and not dealer_win:
             return "{name} has won!".format(name=player.name)
         elif dealer_win and not player_win:
             return "The Dealer beat {name}!".format(name=player.name)
         return "{name} has tied with the Dealer!".format(name=player.name)
 
-
     def playRound(self, player, dealer):
         self.dealCards(player, dealer)
-        print("Dealer has a {card}".format(card=dealer.hand[-1]))
 
-        while(player.control(dealer, deck)):
-            pass
+        print("Dealer has a(n) {card}".format(card=dealer.hand[-1]))
 
-        while(dealer.decide(player, deck)):
+        while((not player.hasBlackjack()) and player.control(dealer, deck)):
+                pass
+
+        while((not dealer.hasBlackjack()) and dealer.control(player, deck)):
             pass
 
         print(self.reportWin(player, dealer))
-
 
 class Player:
 
     def __init__(self, name, ai=False):
         self.name = name
         self.hand = []
-        self.sum = 0
         self.ai = ai
         self.busted = False
 
     def __repr__(self):
         return "{name}, you have {count} left to play.".format(name=self.name, count=len(self.hand))
 
+    def hasBlackjack(self):
+        if self.calcHand() == 21:
+            print("{name} has blackjack!".format(name=self.name))
+            return True
+        return False
+
+    def calcHand(self):
+        value = 0
+        for card in self.hand:
+            if not card.face == "ace":
+                value += Card.faces[card.face]
+        for card in self.hand:
+            if card.face == "ace":
+                if value + Card.faces[card.face] <= 21:
+                    value += Card.faces[card.face]
+                else:
+                    value += 1
+        if value > 21:
+            self.busted = True
+        return value
+
     def drawCard(self, deck):
         card = deck.drawCard()
         self.hand.append(card)
-        self.sum += Card.faces[card.face]
+        return card
 
     def hit(self, deck):
-        print("{name} has {sum}, they hit.".format(
-            name=self.name, sum=self.sum))
-        self.drawCard(deck)
-        if self.sum > 21:
+        print("{name} hit. They drew a(n) {card}".format(
+            name=self.name, card=self.drawCard(deck)))
+
+        if self.calcHand() > 21:
             self.busted = True
             print("{name} has {sum}, they have busted.".format(
-                name=self.name, sum=self.sum))
+                name=self.name, sum=self.calcHand()))
             return False
-        print("{name} now has {sum}".format(name=self.name, sum=self.sum))
         return True
 
     def stand(self):
         print("{name} has {sum}, they decide to stand.".format(
-            name=self.name, sum=self.sum))
+            name=self.name, sum=self.calcHand()))
         return False
 
     def fold(self):
@@ -111,34 +128,36 @@ class Player:
         2 - Stand
         3 - Fold (1/2 of your bet is returned)\n
         """
-        print("Your Hand:\n")
-        for card in self.hand:
-            print(card)
-        if not self.busted:
-            pick = input(prompt)
-            if pick == "1":
-                return self.hit(deck)
-            elif pick == "2":
-                return self.stand()
-            elif pick == "3":
-                return self.fold()
-            else:
-                print("Invalid Input!")
-                return self.choose(Deck)
+        if not self.calcHand == 21:
+            print("Your Hand:")
+            for card in self.hand:
+                print(card)
+            print("Value:", self.calcHand())
+            if not self.busted:
+                pick = input(prompt)
+                if pick == "1":
+                    return self.hit(deck)
+                elif pick == "2":
+                    return self.stand()
+                elif pick == "3":
+                    return self.fold()
+                else:
+                    print("Invalid Input!")
+                    return self.choose(Deck)
+        print("{name} has 21.".format(name=self.name))
         return False
 
     def decide(self, other, deck):
         if not other.busted:
-            if self.sum <= 16 or not (self.sum >= other.sum):
+            if self.calcHand() <= 16 or not (self.calcHand() >= other.calcHand()):
                 return self.hit(deck)
-            elif self.sum in range(18, 22):
+            elif self.calcHand() in range(18, 22):
                 return self.stand()
         return False
 
     def reset(self, deck):
         deck.mainDeck += self.hand
         self.hand = []
-        self.sum = 0
         self.busted = False
 
 
