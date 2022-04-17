@@ -13,7 +13,6 @@ class Card:
     def __repr__(self):
         return "{face} of {suit}".format(face=self.face.title(), suit=self.suit.title())
 
-
 class Deck:
 
     def __init__(self):
@@ -46,17 +45,21 @@ class Deck:
         return "{name} has tied with the Dealer!".format(name=player.name)
 
     def playRound(self, player, dealer):
-        self.dealCards(player, dealer)
+        choice = True
+        while choice:
+            self.dealCards(player, dealer)
+            print("Dealer has a(n) {card}\n".format(card=dealer.hand[-1]))
 
-        print("Dealer has a(n) {card}".format(card=dealer.hand[-1]))
-
-        while((not player.hasBlackjack()) and player.control(dealer, deck)):
+            while((not player.hasBlackjack()) and player.control(dealer, deck)):
                 pass
 
-        while((not dealer.hasBlackjack()) and dealer.control(player, deck)):
-            pass
+            while((not dealer.hasBlackjack()) and dealer.control(player, deck)):
+                pass
 
-        print(self.reportWin(player, dealer))
+            print(self.reportWin(player, dealer))
+            choice = input("\nWould you like to play again? (y/n)\n") == "y"
+            player.reset(deck)
+            dealer.reset(deck)
 
 class Player:
 
@@ -96,23 +99,19 @@ class Player:
         return card
 
     def hit(self, deck):
-        print("{name} hit. They drew a(n) {card}".format(
+        print("{name} hit. They drew a(n) {card}\n".format(
             name=self.name, card=self.drawCard(deck)))
 
         if self.calcHand() > 21:
             self.busted = True
-            print("{name} has {sum}, they have busted.".format(
+            print("{name} has {sum}, they have busted.\n".format(
                 name=self.name, sum=self.calcHand()))
             return False
         return True
 
     def stand(self):
-        print("{name} has {sum}, they decide to stand.".format(
+        print("{name} has {sum}, they decide to stand.\n".format(
             name=self.name, sum=self.calcHand()))
-        return False
-
-    def fold(self):
-        print("{name} has decided to fold.".format(name=self.name))
         return False
 
     def control(self, other, deck):
@@ -125,22 +124,16 @@ class Player:
         prompt = """
         How would you like to play?
         1 - Hit
-        2 - Stand
-        3 - Fold (1/2 of your bet is returned)\n
+        2 - Stand\n
         """
         if not self.calcHand == 21:
-            print("Your Hand:")
-            for card in self.hand:
-                print(card)
-            print("Value:", self.calcHand())
+            self.printHand()
             if not self.busted:
                 pick = input(prompt)
                 if pick == "1":
                     return self.hit(deck)
                 elif pick == "2":
                     return self.stand()
-                elif pick == "3":
-                    return self.fold()
                 else:
                     print("Invalid Input!")
                     return self.choose(Deck)
@@ -149,22 +142,28 @@ class Player:
 
     def decide(self, other, deck):
         if not other.busted:
+            self.printHand()
             if self.calcHand() <= 16 or not (self.calcHand() >= other.calcHand()):
                 return self.hit(deck)
             elif self.calcHand() in range(18, 22):
                 return self.stand()
         return False
 
+    def printHand(self):
+        print("{name}'s Hand:".format(name = self.name))
+        for card in self.hand:
+            print(card)
+        print("Value: " + str(self.calcHand()) + "\n")
+
     def reset(self, deck):
         deck.mainDeck += self.hand
         self.hand = []
         self.busted = False
 
-
 deck = Deck()
-player = Player(" ")
+player = Player("")
 dealer = Player("The Dealer", True)
 
 player.name = input("What is your name?\n")
-
+print("\n")
 deck.playRound(player, dealer)
