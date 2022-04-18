@@ -1,5 +1,6 @@
 # Terminal-Based Blackjack
 This is a blackjack game between two players. 
+![Demo of terminal-based blackjack game](https://i.imgur.com/CuWdZ62.gif)
 ## Gameplay Loop
 + At the start of the round: Player is asked if they want to play a round
 + Each player(player, dealer) is then dealt a card, alternating, until they have 2 cards.
